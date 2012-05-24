@@ -9,7 +9,7 @@ from PIL import Image, ImageDraw
 
 hat = Image.open(os.path.join(os.path.dirname(__file__), '..', "ScumbagSteveHat.png"))
 
-#STEVE_ROLL = math.radians('
+STEVE_ROLL = -0.218689755275
 
 # TODO: turn in to class. remove code dup.
 # correct for face roll
@@ -74,6 +74,15 @@ def find_coords(resp, hat_size):
     )))
 
 
+def find_rotation(resp):
+    """Return degrees to rotate hat, accounting for ss calibration."""
+    assert len(resp['photos']) == 1
+    tag = find_tag(resp['photos'][0]['tags'])
+    roll = math.radians(tag['roll'])
+
+    return math.degrees(-abs(STEVE_ROLL - roll))
+
+
 def decorate(im, resp):
     """Decorate an image with face data."""
 
@@ -115,7 +124,7 @@ def decorate(im, resp):
 
 
 if __name__ == '__main__':
-    with open(os.path.join('..', 'ss.json')) as f:
+    with open(os.path.join('..', 'daniel.json')) as f:
         resp = json.load(f)
 
     url = resp['photos'][0]['url']
@@ -124,14 +133,18 @@ if __name__ == '__main__':
         facef.write(f.read())
     facef.seek(0)
     face = Image.open(facef)
+    decorate(face, resp)
+
+    rotation = find_rotation(resp)
+    print "rotation: ", rotation
+    new_hat = hat.rotate(rotation)
 
     resize_to = find_scale(resp)
     print "resize to: ", resize_to
-    new_hat = hat.resize(resize_to)
+    new_hat = new_hat.resize(resize_to)
 
     coords = find_coords(resp, resize_to)
     print "coords: ", coords
 
     face.paste(new_hat, coords, new_hat)
-    decorate(face, resp)
     face.save('../test.png')
