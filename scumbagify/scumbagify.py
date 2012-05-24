@@ -3,8 +3,9 @@ import urllib
 import os.path
 import json
 import tempfile
+import math
 from contextlib import closing
-from PIL import Image
+from PIL import Image, ImageDraw
 
 hat = Image.open(os.path.join(os.path.dirname(__file__), '..', "ScumbagSteveHat.png"))
 
@@ -64,12 +65,12 @@ def find_coords(resp, hat_size):
     center_x = norm_x(tag['center']['x'])
     center_y = norm_y(tag['center']['y'])
     face_height = norm_y(tag['height'])
-    return {
+    return tuple(map(int, (
         # relative to hat size
-        'x': center_x - hat_size[0] / 2,
+        center_x - hat_size[0] / 2,
         # top of hat relative to face
-        'y': center_y - (face_height * 1.15)
-    }
+        center_y - (face_height * 1.15)
+    )))
 
 
 def decorate(im, resp):
@@ -78,7 +79,7 @@ def decorate(im, resp):
     photo = resp['photos'][0]
     tag = find_tag(photo['tags'])
     color = (232, 118, 0)
-    #red = (0xD0, 0x20, 0x00)#D20
+    red = (0xD0, 0x20, 0x00)#D20
     norm_y = lambda y: int(photo['height'] * (y / 100))
     norm_x = lambda x: int(photo['width'] * (x / 100))
 
@@ -96,12 +97,31 @@ def decorate(im, resp):
     t_height = norm_y(tag['height'])
     center_x = norm_x(tag['center']['x'])
     center_y = norm_y(tag['center']['y'])
+
+    print tag['roll']
+    roll = math.radians(tag['roll'])
+    print roll
+    print math.cos(roll)
+    print math.sin(roll)
+    print math.hypot(math.cos(roll), math.sin(roll))
+    print math.sqrt(math.cos(roll) **2 - math.sin(roll) ** 2)
+    roll_x = roll * t_height
+    draw = ImageDraw.Draw(im)
+    draw.line([(center_x, center_y), (center_x, center_y - t_height)],
+              fill=color)
+    draw.line([(center_x, center_y), (center_x + roll_x, center_y - t_height)],
+              fill=red)
+    """
     for i in xrange(t_height):
         im.putpixel((center_x, center_y - i), (color))
+        roll_x = math.cos(roll) * center_x
+        im.putpixel((int(roll_x), center_y - i), red)
+    """
+
 
 
 if __name__ == '__main__':
-    with open(os.path.join('..', 'daniel.json')) as f:
+    with open(os.path.join('..', 'test.json')) as f:
         resp = json.load(f)
 
     url = resp['photos'][0]['url']
@@ -118,6 +138,6 @@ if __name__ == '__main__':
     coords = find_coords(resp, resize_to)
     print "coords: ", coords
 
-    face.paste(new_hat, (int(coords['x']), int(coords['y'])), new_hat)
+    face.paste(new_hat, coords, new_hat)
     decorate(face, resp)
     face.save('../test.png')
