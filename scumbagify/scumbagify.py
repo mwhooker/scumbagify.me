@@ -5,11 +5,14 @@ import json
 import tempfile
 import math
 from contextlib import closing
+from numpy import matrix
 from PIL import Image, ImageDraw
 
 hat = Image.open(os.path.join(os.path.dirname(__file__), '..', "ScumbagSteveHat.png"))
 
 STEVE_ROLL = -0.218689755275
+HAT_LEFT_MARGIN = 15
+HAT_TOP_MARGIN = 6
 
 # TODO: turn in to class. remove code dup.
 # correct for face roll
@@ -27,6 +30,12 @@ class Face(object):
         self.tag = self.find_tag(self.photo['tags'])
         self.norm_y = lambda y: int(self.photo['height'] * (y / 100))
         self.norm_x = lambda x: int(self.photo['width'] * (x / 100))
+        self.roll = math.radians(self.tag['roll'])
+
+        self.rotation_matrix = matrix([
+            [math.cos(self.roll), -math.sin(self.roll)],
+            [math.sin(self.roll), math.cos(self.roll)]]
+        )
 
         self.face = {
             'center': (
@@ -34,8 +43,12 @@ class Face(object):
                 self.norm_y(self.tag['center']['y'])
             ),
             'height': self.norm_y(self.tag['height']),
-            'width': self.norm_x(self.tag['width'])
+            'width': self.norm_x(self.tag['width']),
+            'upper_left': (
+                0, 0
+            )
         }
+
 
     def find_tag(self, tags):
         """Find the tag that most likely identifies the face."""
@@ -48,9 +61,8 @@ class Face(object):
 
     def find_rotation(self):
         """Return degrees to rotate hat, accounting for ss calibration."""
-        roll = math.radians(self.tag['roll'])
 
-        return math.degrees(-abs(STEVE_ROLL - roll))
+        return math.degrees(-abs(STEVE_ROLL - self.roll))
 
 
     def find_scale(self):
@@ -79,9 +91,11 @@ class Face(object):
         center_x, center_y  = self.face['center']
         return tuple(map(int, (
             # relative to hat size
-            center_x - hat_size[0] / 2,
+            self.face['upper_left'][0] - HAT_LEFT_MARGIN,
+            #center_x - hat_size[0] / 2,
             # top of hat relative to face
-            center_y - (self.face['height'] * 1.35)
+            self.face['upper_left'][1] - HAT_TOP_MARGIN
+            #center_y - (self.face['height'] * 1.35)
         )))
 
 
@@ -102,13 +116,30 @@ class Face(object):
                 im.putpixel((x+1, y+1), color)
                 #im[x, y] = (0xcc, 0xcc, 0xcc)
 
+        im.putpixel(self.face['upper_left'], color)
+
 
         center_x, center_y  = self.face['center']
-        roll = math.radians(self.tag['roll'])
-        roll_x = math.sin(roll) * self.face['height']
+        roll_x = math.sin(self.roll) * self.face['height']
+        top = matrix([
+            [0], [-self.face['height']]
+        ])
+        bottom = matrix([
+            [0], [self.face['height']]
+        ])
+        top = self.rotation_matrix * top
+        bottom = self.rotation_matrix * bottom
+        top = (top[0][0] + center_x, top[1][0] + center_y)
+        bottom = (bottom[0][0] + center_x, bottom[1][0] + center_y)
+        print top
+        print bottom
+
+
         draw = ImageDraw.Draw(im)
         draw.line([(center_x, center_y), (center_x, center_y - self.face['height'])],
                   fill=color)
+        draw.line([top, bottom], fill=red)
+        """
         draw.line(
             [
                 (center_x - roll_x, center_y + self.face['height']),
@@ -116,6 +147,7 @@ class Face(object):
             ],
             fill=red
         )
+        """
 
     def scumbagify(self, im):
         self.decorate(im)
@@ -147,7 +179,7 @@ def scumbagify(face, url):
 
 
 if __name__ == '__main__':
-    with open(os.path.join('..', 'daniel.json')) as f:
+    with open(os.path.join('..', 'test.json')) as f:
         resp = json.load(f)
 
     url = resp['photos'][0]['url']
