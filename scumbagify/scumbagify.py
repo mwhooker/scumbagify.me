@@ -114,40 +114,25 @@ class Face(object):
                 im.putpixel((x, y+1), color)
                 im.putpixel((x+1, y), color)
                 im.putpixel((x+1, y+1), color)
-                #im[x, y] = (0xcc, 0xcc, 0xcc)
 
         im.putpixel(self.face['upper_left'], color)
 
 
         center_x, center_y  = self.face['center']
-        roll_x = math.sin(self.roll) * self.face['height']
-        top = matrix([
+        top = self.rotation_matrix * matrix([
             [0], [-self.face['height']]
         ])
-        bottom = matrix([
+        bottom = self.rotation_matrix * matrix([
             [0], [self.face['height']]
         ])
-        top = self.rotation_matrix * top
-        bottom = self.rotation_matrix * bottom
         top = (top[0][0] + center_x, top[1][0] + center_y)
         bottom = (bottom[0][0] + center_x, bottom[1][0] + center_y)
-        print top
-        print bottom
-
 
         draw = ImageDraw.Draw(im)
         draw.line([(center_x, center_y), (center_x, center_y - self.face['height'])],
                   fill=color)
         draw.line([top, bottom], fill=red)
-        """
-        draw.line(
-            [
-                (center_x - roll_x, center_y + self.face['height']),
-                (center_x + roll_x, center_y - self.face['height'])
-            ],
-            fill=red
-        )
-        """
+
 
     def scumbagify(self, im):
         self.decorate(im)
