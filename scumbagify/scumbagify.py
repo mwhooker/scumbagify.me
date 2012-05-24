@@ -9,10 +9,13 @@ from PIL import Image, ImageDraw
 
 hat = Image.open(os.path.join(os.path.dirname(__file__), '..', "ScumbagSteveHat.png"))
 
+#STEVE_ROLL = math.radians('
+
 # TODO: turn in to class. remove code dup.
 # correct for face roll
-    # move along x
-    # rotate to match roll.
+    # move along x (DONE)
+    # rotate to match ss roll.
+# more intelligent find_tag method. weight for middle
 
 
 def scumbagify(face, url):
@@ -37,14 +40,12 @@ def find_tag(tags):
 def find_scale(resp):
     """Return (x, y) we think we should scale the hat to."""
 
-    #return hat.size
-
     assert len(resp['photos']) == 1
     photo = resp['photos'][0]
     tag = find_tag(photo['tags'])
     norm_x = lambda x: int(photo['width'] * (x / 100))
 
-    width = norm_x(tag['width']) * 1.75
+    width = norm_x(tag['width']) * 1.8
 
     print "hat size, ", hat.size
     print "width: ", width
@@ -69,7 +70,7 @@ def find_coords(resp, hat_size):
         # relative to hat size
         center_x - hat_size[0] / 2,
         # top of hat relative to face
-        center_y - (face_height * 1.15)
+        center_y - (face_height * 1.35)
     )))
 
 
@@ -114,7 +115,7 @@ def decorate(im, resp):
 
 
 if __name__ == '__main__':
-    with open(os.path.join('..', 'test.json')) as f:
+    with open(os.path.join('..', 'ss.json')) as f:
         resp = json.load(f)
 
     url = resp['photos'][0]['url']
