@@ -103,8 +103,13 @@ def decorate(im, resp):
     draw = ImageDraw.Draw(im)
     draw.line([(center_x, center_y), (center_x, center_y - t_height)],
               fill=color)
-    draw.line([(center_x, center_y), (center_x + roll_x, center_y - t_height)],
-              fill=red)
+    draw.line(
+        [
+            (center_x - roll_x, center_y + t_height),
+            (center_x + roll_x, center_y - t_height)
+        ],
+        fill=red
+    )
 
 
 
