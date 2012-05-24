@@ -9,6 +9,9 @@ from PIL import Image
 hat = Image.open(os.path.join(os.path.dirname(__file__), '..', "ScumbagSteveHat.png"))
 
 # TODO: turn in to class. remove code dup.
+# correct for face roll
+    # move along x
+    # rotate to match roll.
 
 
 def scumbagify(face, url):
@@ -59,13 +62,13 @@ def find_coords(resp, hat_size):
     norm_x = lambda x: int(photo['width'] * (x / 100))
 
     center_x = norm_x(tag['center']['x'])
-    center_y = norm_y(tag['center']['y'] - 10)
+    center_y = norm_y(tag['center']['y'])
     face_height = norm_y(tag['height'])
     return {
         # relative to hat size
         'x': center_x - hat_size[0] / 2,
         # top of hat relative to face
-        'y': center_y - face_height
+        'y': center_y - (face_height * 1.15)
     }
 
 
@@ -98,7 +101,7 @@ def decorate(im, resp):
 
 
 if __name__ == '__main__':
-    with open(os.path.join('..', 'test.json')) as f:
+    with open(os.path.join('..', 'daniel.json')) as f:
         resp = json.load(f)
 
     url = resp['photos'][0]['url']
@@ -112,10 +115,9 @@ if __name__ == '__main__':
     print "resize to: ", resize_to
     new_hat = hat.resize(resize_to)
 
-    #coords = find_coords(find_tag(resp))
     coords = find_coords(resp, resize_to)
     print "coords: ", coords
 
     face.paste(new_hat, (int(coords['x']), int(coords['y'])), new_hat)
-    #decorate(face, resp)
+    decorate(face, resp)
     face.save('../test.png')
