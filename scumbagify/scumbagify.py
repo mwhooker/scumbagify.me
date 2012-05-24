@@ -98,25 +98,13 @@ def decorate(im, resp):
     center_x = norm_x(tag['center']['x'])
     center_y = norm_y(tag['center']['y'])
 
-    print tag['roll']
     roll = math.radians(tag['roll'])
-    print roll
-    print math.cos(roll)
-    print math.sin(roll)
-    print math.hypot(math.cos(roll), math.sin(roll))
-    print math.sqrt(math.cos(roll) **2 - math.sin(roll) ** 2)
-    roll_x = roll * t_height
+    roll_x = math.sin(roll) * t_height
     draw = ImageDraw.Draw(im)
     draw.line([(center_x, center_y), (center_x, center_y - t_height)],
               fill=color)
     draw.line([(center_x, center_y), (center_x + roll_x, center_y - t_height)],
               fill=red)
-    """
-    for i in xrange(t_height):
-        im.putpixel((center_x, center_y - i), (color))
-        roll_x = math.cos(roll) * center_x
-        im.putpixel((int(roll_x), center_y - i), red)
-    """
 
 
 
