@@ -34,7 +34,7 @@ class Face(object):
                 self.norm_y(self.tag['center']['y'])
             ),
             'height': self.norm_y(self.tag['height']),
-            'width': self.norm_y(self.tag['width'])
+            'width': self.norm_x(self.tag['width'])
         }
 
     def find_tag(self, tags):
@@ -67,6 +67,14 @@ class Face(object):
     def find_coords(self, hat_size):
         """Find where we should place the hat."""
 
+        """
+            roll = math.radians(tag['roll'])
+            roll_x = math.sin(roll) * face_height
+            return tuple(map(int, (
+# relative to hat size
+                center_x - hat_size[0] / 2,
+                (center_x + roll_x),# - hat_size[0] / 2,
+        """
 
         center_x, center_y  = self.face['center']
         return tuple(map(int, (
