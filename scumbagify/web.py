@@ -7,7 +7,7 @@ from contextlib import closing
 from face_client import face_client
 from hashlib import md5
 from PIL import Image
-from flask import Flask, render_template, request
+from flask import Flask, redirect, render_template, request
 from werkzeug.contrib.fixers import ProxyFix
 
 from . import scumbagify, config, __version__
@@ -29,8 +29,19 @@ face = face_client.FaceClient(
 )
 
 
+def send_to_image(url):
+    best = request.accept_mimetypes.best_match([
+        'image/*',
+        'text/html',
+    ])
+    if best == 'image/*':
+        return redirect(url)
+    else:
+        return render_template('redirect.html', url=url)
+
 @app.route('/')
 def index():
+    print request.accept_mimetypes
     url = request.args.get('src')
     debug = request.args.get('debug')
     if not url:
@@ -61,7 +72,7 @@ def index():
         try:
             scumbagify.scumbagify(img, resp, app.config.get('DEBUG') or debug)
         except scumbagify.FaceNotFound:
-            return render_template('redirect.html', url=url)
+            return send_to_image(url)
 
         outf = tempfile.TemporaryFile()
         img.save(outf, img.format)
@@ -71,7 +82,4 @@ def index():
         key.set_contents_from_file(outf, reduced_redundancy=True, rewind=True)
         key.make_public()
 
-    return render_template(
-        'redirect.html',
-        url='https://s3.amazonaws.com/scumbagifyme/%s' % key.name
-    )
+    return send_to_image('https://s3.amazonaws.com/scumbagifyme/%s' % key.name)
