@@ -68,7 +68,7 @@ def index():
         try:
             scumbagify.scumbagify(img, resp, app.config.get('DEBUG') or debug)
         except scumbagify.FaceNotFound:
-            return redirect(url)
+            return render_template('redirect.html', url=url)
 
         outf = tempfile.TemporaryFile()
         img.save(outf, img.format)
@@ -78,8 +78,7 @@ def index():
         key.set_contents_from_file(outf, reduced_redundancy=True, rewind=True)
         key.make_public()
 
-    return redirect(
-        'https://s3.amazonaws.com/scumbagifyme/%s' % key.name
-        # couldn't get this to work with boto 2.4
-        #key.generate_url(7 * 24 * 60 * 60)
+    return render_template(
+        'redirect.html',
+        url='https://s3.amazonaws.com/scumbagifyme/%s' % key.name
     )
