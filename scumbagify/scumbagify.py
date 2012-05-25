@@ -59,7 +59,6 @@ def scumbagify(im, resp, debug=False):
         raise FaceNotFound
 
 
-
 class Face(object):
 
     def __init__(self, photo, tag):

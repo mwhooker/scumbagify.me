@@ -38,7 +38,12 @@ def index():
     if not url:
         return render_template('index.html')
     mtype, encoding = mimetypes.guess_type(url)
-    ext = (set(mimetypes.guess_all_extensions(mtype)) - set(['.jpe'])).pop()
+
+    try:
+        # no one knows what .jpe is.
+        ext = (set(mimetypes.guess_all_extensions(mtype)) - set(['.jpe'])).pop()
+    except KeyError:
+        ext = ".jpg"
 
     key = Key(bucket)
     key.key = "%s%s_%s%s" % (
