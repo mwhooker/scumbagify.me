@@ -13,6 +13,8 @@ hat = Image.open(os.path.join(os.path.dirname(__file__), '..', "ScumbagSteveHat.
 STEVE_ROLL = -0.218689755275
 HAT_LEFT_MARGIN = 15
 HAT_TOP_MARGIN = 6
+# TODO: scale by resize
+HAT_MARGIN = matrix([15, 6])
 
 # TODO: turn in to class. remove code dup.
 # correct for face roll
@@ -77,7 +79,7 @@ class Face(object):
     def find_scale(self):
         """Return (x, y) we think we should scale the hat to."""
 
-        width = self.face['width'] * 1.8
+        width = self.face['width'] * 2
 
         print "hat size, ", hat.size
         print "width: ", width
@@ -88,39 +90,13 @@ class Face(object):
     def find_coords(self, hat_size):
         """Find where we should place the hat."""
 
-        """
-            roll = math.radians(tag['roll'])
-            roll_x = math.sin(roll) * face_height
-            return tuple(map(int, (
-# relative to hat size
-                center_x - hat_size[0] / 2,
-                (center_x + roll_x),# - hat_size[0] / 2,
-        """
-
-        hatm = matrix([
-            -hat.size[0] / 2,
-            -self.face['height'] - (hat.size[1])
-        ])
-        offset = self.matrices['center']
-        top_center = (
-            hatm + offset
-        ) * self.matrices['rotation']
-        print "hatm: ", hatm
-        print "offset: ", offset
-        print hatm + offset
-        print "top center: ", top_center
-
-        center_x, center_y  = self.face['center']
-
-        return tuple(map(int, top_center.getA1()))
-        return tuple(map(int, (
-            # relative to hat size
-           # self.face['upper_left'][0] - HAT_LEFT_MARGIN,
-            #center_x - hat_size[0] / 2,
-            # top of hat relative to face
-           # self.face['upper_left'][1] - HAT_TOP_MARGIN
-            #center_y - (self.face['height'] * 1.35)
-        )))
+        top = self.matrices['rotation'] * matrix([
+            [0], [-self.face['height'] * .75]
+        ]) + self.matrices['center'].getT() - (matrix(hat_size).getT() / 2)
+       
+       
+        #+ self.matrices['center'] - (matrix(hat.size) /2)
+        return tuple(map(int, top.getA1()))
 
 
     def decorate(self, im):
@@ -129,39 +105,36 @@ class Face(object):
         color = (232, 118, 0)
         red = (0xD0, 0x20, 0x00)#D20
 
+
+        box = self.matrices['rotation'].dot(self.matrices['bbox']).getT() + self.matrices['center']
+        draw = ImageDraw.Draw(im)
+        draw.polygon(map(int, box.getA1()))
+
+        top = self.matrices['rotation'] * matrix([
+            [0], [-self.face['height']]
+        ]) + self.matrices['center'].getT()
+
+        bottom = self.matrices['rotation'] * matrix([
+            [0], [self.face['height']]
+        ]) + self.matrices['center'].getT()
+
+        center_x, center_y  = self.face['center']
+        draw.line([(center_x, center_y), (center_x, center_y - self.face['height'])],
+                  fill=color)
+        draw.line([tuple(top.getA1()), tuple(bottom.getA1())], fill=red)
+
         for t in [i for i in self.tag if isinstance(self.tag[i], dict)]:
             if 'x' in self.tag[t]:
                 x = self.norm_x(self.tag[t]['x'])
                 y = self.norm_y(self.tag[t]['y'])
-                print "%s: (%s, %s)" % (t, x, y)
+                print "putpixel %s: (%s, %s)" % (t, x, y)
                 im.putpixel((x, y), color)
                 im.putpixel((x, y+1), color)
                 im.putpixel((x+1, y), color)
                 im.putpixel((x+1, y+1), color)
 
 
-        box = self.matrices['rotation'].dot(self.matrices['bbox']).getT() + self.matrices['center']
-        draw = ImageDraw.Draw(im)
-        draw.polygon(map(int, box.getA1()))
-
-
-        center_x, center_y  = self.face['center']
-        top = self.matrices['rotation'] * matrix([
-            [0], [-self.face['height']]
-        ])
-        bottom = self.matrices['rotation'] * matrix([
-            [0], [self.face['height']]
-        ])
-        top = (top[0][0] + center_x, top[1][0] + center_y)
-        bottom = (bottom[0][0] + center_x, bottom[1][0] + center_y)
-
-        draw.line([(center_x, center_y), (center_x, center_y - self.face['height'])],
-                  fill=color)
-        draw.line([top, bottom], fill=red)
-
-
     def scumbagify(self, im):
-        self.decorate(im)
 
         rotation = self.find_rotation()
         print "rotation: ", rotation
@@ -175,6 +148,7 @@ class Face(object):
         print "coords: ", coords
 
         face.paste(new_hat, coords, new_hat)
+        self.decorate(im)
         return face
 
 
@@ -188,7 +162,7 @@ def scumbagify(face, url):
 
 
 if __name__ == '__main__':
-    with open(os.path.join('..', 'ss.json')) as f:
+    with open(os.path.join('..', 'daniel.json')) as f:
         resp = json.load(f)
 
     url = resp['photos'][0]['url']
