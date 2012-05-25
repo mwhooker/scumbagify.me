@@ -127,18 +127,15 @@ class Face(object):
 
 
         box = self.matrices['rotation'].dot(self.matrices['bbox']).getT() + self.matrices['center']
-        print map(int, box.getA1())
         draw = ImageDraw.Draw(im)
         draw.polygon(map(int, box.getA1()))
 
 
-        """
-        im.putpixel(self.face['upper_left'], color)
         center_x, center_y  = self.face['center']
-        top = self.rotation_matrix * matrix([
+        top = self.matrices['rotation'] * matrix([
             [0], [-self.face['height']]
         ])
-        bottom = self.rotation_matrix * matrix([
+        bottom = self.matrices['rotation'] * matrix([
             [0], [self.face['height']]
         ])
         top = (top[0][0] + center_x, top[1][0] + center_y)
@@ -147,13 +144,6 @@ class Face(object):
         draw.line([(center_x, center_y), (center_x, center_y - self.face['height'])],
                   fill=color)
         draw.line([top, bottom], fill=red)
-        draw.polygon((
-            self.face['upper_left'],
-            self.face['upper_right'],
-            self.face['lower_left'],
-            self.face['lower_right']
-        ))
-        """
 
 
     def scumbagify(self, im):
