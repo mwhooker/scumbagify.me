@@ -7,6 +7,7 @@ import math
 from contextlib import closing
 from numpy import matrix, array
 from PIL import Image, ImageDraw
+from itertools import ifilter
 
 hat = Image.open(os.path.join(os.path.dirname(__file__), '..', "ScumbagSteveHat.png"))
 
@@ -23,16 +24,49 @@ HAT_MARGIN = matrix([15, 6])
 # more intelligent find_tag method. weight for middle
 
 
+def find_tag(tags):
+    """Find the tag that most likely identifies the face."""
+    tags = [t for t in tags \
+            if 'face' in t['attributes']]
+    return max(
+        tags,
+        key=lambda t: t['attributes']['face']['confidence']
+    )
+
+
+def tag_filter(tag):
+    """Is this person a scumbag?"""
+    return True
+
+
+def scumbagify_url(face, url):
+    """Place the hat on the image at `url` and upload to s3.
+
+    returns uploaded public URL."""
+    tag = face.faces_detect(url)
+    if tag['status'] != 'success':
+        raise Exception("Retrieving tags not successful. %s" % tag['status'])
+
+
+def scumbagify(im, resp):
+    assert len(resp['photos']) == 1
+
+    photo = resp['photos'][0]
+    for tag in ifilter(tag_filter, photo['tags']):
+        face = Face(photo, tag)
+        face.scumbagify(im)
+
+
+
 class Face(object):
 
-    def __init__(self, resp):
-        assert len(resp['photos']) == 1
-        self.resp = resp
-        self.photo = resp['photos'][0]
-        self.tag = self.find_tag(self.photo['tags'])
+    def __init__(self, photo, tag):
+        self.photo = photo
+        self.tag = tag
+        print "tagid: ", self.tag['tid']
+
         self.norm_y = lambda y: int(self.photo['height'] * (y / 100))
         self.norm_x = lambda x: int(self.photo['width'] * (x / 100))
-
 
         self.face = {
             'center': (
@@ -56,19 +90,7 @@ class Face(object):
                 [math.sin(self.face['roll']), math.cos(self.face['roll'])]]
             )
         }
-        
 
-        print self.matrices
-
-
-    def find_tag(self, tags):
-        """Find the tag that most likely identifies the face."""
-        tags = [t for t in tags \
-                if 'face' in t['attributes']]
-        return max(
-            tags,
-            key=lambda t: t['attributes']['face']['confidence']
-        )
 
     def find_rotation(self):
         """Return degrees to rotate hat, accounting for ss calibration."""
@@ -147,18 +169,9 @@ class Face(object):
         coords = self.find_coords(resize_to)
         print "coords: ", coords
 
-        face.paste(new_hat, coords, new_hat)
+        im.paste(new_hat, coords, new_hat)
         self.decorate(im)
-        return face
-
-
-def scumbagify(face, url):
-    """Place the hat on the image at `url` and upload to s3.
-
-    returns uploaded public URL."""
-    tag = face.faces_detect(url)
-    if tag['status'] != 'success':
-        raise Exception("Retrieving tags not successful. %s" % tag['status'])
+        return im
 
 
 if __name__ == '__main__':
@@ -167,10 +180,9 @@ if __name__ == '__main__':
 
     url = resp['photos'][0]['url']
     with closing(urllib.urlopen(url)) as f:
-        facef = tempfile.TemporaryFile()
-        facef.write(f.read())
-    facef.seek(0)
-    face = Image.open(facef)
-    f = Face(resp)
-    f.scumbagify(face)
-    face.save('../test.png')
+        imgf = tempfile.TemporaryFile()
+        imgf.write(f.read())
+    imgf.seek(0)
+    img = Image.open(imgf)
+    scumbagify(img, resp)
+    img.save('../test.png')
