@@ -1,4 +1,4 @@
-__version__ = "0.1"
+__version__ = "0.2"
 
 import tempfile
 import mimetypes
@@ -9,8 +9,7 @@ from contextlib import closing
 from face_client import face_client
 from hashlib import md5
 from PIL import Image
-from flask import Flask, redirect, request
-#from flaskext.cache import Cache
+from flask import Flask, redirect, render_template, request
 from werkzeug.contrib.fixers import ProxyFix
 
 from . import scumbagify, config
@@ -19,9 +18,6 @@ from . import scumbagify, config
 app = Flask(__name__)
 app.wsgi_app = ProxyFix(app.wsgi_app)
 app.config.from_object(config)
-
-#cache = Cache(app)
-
 
 s3 = S3Connection(
     app.config.get('AWS_KEY'),
@@ -38,12 +34,15 @@ face = face_client.FaceClient(
 @app.route('/')
 def index():
     url = request.args.get('url')
+    if not url:
+        return render_template('index.html')
     mtype, encoding = mimetypes.guess_type(url)
     ext = (set(mimetypes.guess_all_extensions(mtype)) - set(['.jpe'])).pop()
 
     key = Key(bucket)
-    key.key = "%s_%s%s" % (
+    key.key = "%s%s_%s%s" % (
         __version__,
+        1 if app.config['DEBUG'] else 0,
         md5(url).hexdigest(),
         ext
     )
@@ -63,7 +62,7 @@ def index():
 
         # Show original picture if we can't find any scumbags
         try:
-            scumbagify.scumbagify(img, resp)
+            scumbagify.scumbagify(img, resp, app.config.get('DEBUG'))
         except scumbagify.FaceNotFound:
             return redirect(url)
 

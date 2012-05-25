@@ -41,7 +41,7 @@ def tag_filter(tag):
     ])
 
 
-def scumbagify(im, resp):
+def scumbagify(im, resp, debug=False):
     """Scumbagify all the faces in the image."""
 
     assert len(resp['photos']) == 1
@@ -51,6 +51,8 @@ def scumbagify(im, resp):
     for tag in ifilter(tag_filter, photo['tags']):
         face = Face(photo, tag)
         face.scumbagify(im)
+        if debug:
+            face.decorate(im)
         failed = False
 
     if failed:
@@ -172,13 +174,12 @@ class Face(object):
 
         resize_to = self.find_scale()
         print "resize to: ", resize_to
-        new_hat = new_hat.resize(resize_to)
+        new_hat = new_hat.resize(resize_to, Image.ANTIALIAS)
 
         coords = self.find_coords(resize_to)
         print "coords: ", coords
 
         im.paste(new_hat, coords, new_hat)
-        self.decorate(im)
         return im
 
 
