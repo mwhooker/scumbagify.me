@@ -36,15 +36,6 @@ def tag_filter(tag):
     ])
 
 
-def scumbagify_url(face, url):
-    """Place the hat on the image at `url` and upload to s3.
-
-    returns uploaded public URL."""
-    tag = face.faces_detect(url)
-    if tag['status'] != 'success':
-        raise Exception("Retrieving tags not successful. %s" % tag['status'])
-
-
 def scumbagify(im, resp):
     assert len(resp['photos']) == 1
 
@@ -172,7 +163,7 @@ class Face(object):
 
 
 if __name__ == '__main__':
-    with open(os.path.join('..', 'test.json')) as f:
+    with open(os.path.join('..', 'daniel.json')) as f:
         resp = json.load(f)
 
     url = resp['photos'][0]['url']
