@@ -36,7 +36,10 @@ def find_tag(tags):
 
 def tag_filter(tag):
     """Is this person a scumbag?"""
-    return True
+    return all([
+        abs(tag['yaw']) < 15,
+        abs(tag['pitch']) < 15
+    ])
 
 
 def scumbagify_url(face, url):
