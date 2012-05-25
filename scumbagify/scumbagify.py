@@ -97,9 +97,23 @@ class Face(object):
                 (center_x + roll_x),# - hat_size[0] / 2,
         """
 
+        hatm = matrix([
+            -hat.size[0] / 2,
+            -self.face['height'] - (hat.size[1])
+        ])
+        offset = self.matrices['center']
+        top_center = (
+            hatm + offset
+        ) * self.matrices['rotation']
+        print "hatm: ", hatm
+        print "offset: ", offset
+        print hatm + offset
+        print "top center: ", top_center
+
         center_x, center_y  = self.face['center']
+
+        return tuple(map(int, top_center.getA1()))
         return tuple(map(int, (
-            0, 0
             # relative to hat size
            # self.face['upper_left'][0] - HAT_LEFT_MARGIN,
             #center_x - hat_size[0] / 2,
@@ -173,10 +187,8 @@ def scumbagify(face, url):
         raise Exception("Retrieving tags not successful. %s" % tag['status'])
 
 
-
-
 if __name__ == '__main__':
-    with open(os.path.join('..', 'daniel.json')) as f:
+    with open(os.path.join('..', 'ss.json')) as f:
         resp = json.load(f)
 
     url = resp['photos'][0]['url']
