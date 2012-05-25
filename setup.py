@@ -8,7 +8,7 @@ install_requires = [
     'gevent',
     'boto',
     'gunicorn',
-    'face_detect',
+    'face_client',
     'PIL'
 ]
 
