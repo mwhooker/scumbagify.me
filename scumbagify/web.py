@@ -34,6 +34,7 @@ face = face_client.FaceClient(
 @app.route('/')
 def index():
     url = request.args.get('url')
+    debug = request.args.get('debug')
     if not url:
         return render_template('index.html')
     mtype, encoding = mimetypes.guess_type(url)
@@ -42,7 +43,7 @@ def index():
     key = Key(bucket)
     key.key = "%s%s_%s%s" % (
         __version__,
-        1 if app.config['DEBUG'] else 0,
+        1 if app.config['DEBUG'] or debug else 0,
         md5(url).hexdigest(),
         ext
     )
@@ -62,7 +63,7 @@ def index():
 
         # Show original picture if we can't find any scumbags
         try:
-            scumbagify.scumbagify(img, resp, app.config.get('DEBUG'))
+            scumbagify.scumbagify(img, resp, app.config.get('DEBUG') or debug)
         except scumbagify.FaceNotFound:
             return redirect(url)
 
