@@ -118,11 +118,11 @@ class Face(object):
 
         top = self.matrices['rotation']
         # about the middle of the forehead
-        top *= matrix([[0], [-self.face['height'] * .75]])
+        top = top * matrix([[0], [-self.face['height'] * .75]])
         # position over center of face
-        top += self.matrices['center'].getT()
+        top = top + self.matrices['center'].getT()
         # try to get the middle of the hat in the middle of the forehead
-        top -= matrix(hat_size).getT() / 2
+        top = top - matrix(hat_size).getT() / 2
        
         return tuple(map(int, top.getA1()))
 
