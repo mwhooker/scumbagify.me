@@ -59,37 +59,6 @@ class Face(object):
         print self.matrices
 
 
-        """
-        #self.matrices['rotated'] = self.matrices['rotation'] * self.matrices['bbox']
-
-        for c in self.matrices['bboxA']:
-            print c
-
-        self.matrices['rotated'] = [
-            self.matrices['rotation'] * c for c in self.matrices['bboxA']
-        ]
-        print [r * self.matrices['center'] for r in self.matrices['rotated']]
-        #print self.matrices['bbox'] + self.matrices['center']
-        
-        ulm = self.rotation_matrix * matrix([
-            [-self.face['width']],
-            [-self.face['height']]
-        ])
-        lrm = self.rotation_matrix * matrix([
-            [self.face['width']],
-            [self.face['height']]
-        ])
-        self.face['upper_left'] = (
-            ulm[0][0] + self.face['center'][0],
-            ulm[1][0] + self.face['center'][1]
-        )
-        self.face['lower_right'] = (
-            lrm[0][0] + self.face['center'][0],
-            lrm[1][0] + self.face['center'][1]
-        )
-        """
-
-
     def find_tag(self, tags):
         """Find the tag that most likely identifies the face."""
         tags = [t for t in tags \
