@@ -40,9 +40,14 @@ def scumbagify(im, resp):
     assert len(resp['photos']) == 1
 
     photo = resp['photos'][0]
+    failed = True
     for tag in ifilter(tag_filter, photo['tags']):
         face = Face(photo, tag)
         face.scumbagify(im)
+        failed = False
+
+    if failed:
+        raise Exception('no faces found!')
 
 
 
