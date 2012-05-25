@@ -16,7 +16,7 @@ def all():
 
 def restart():
     with settings(hide('stdout')):
-        run('sudo supervisorctl restart mason')
+        run('sudo supervisorctl restart scumbagify')
 
 def provision():
     deps = [
