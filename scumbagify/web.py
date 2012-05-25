@@ -52,7 +52,7 @@ def index():
         resp = face.faces_detect(urls=url)
 
         if resp['status'] != 'success':
-            raise Exception("Retrieving tags not successful. %s" % tag['status'])
+            raise Exception("Retrieving tags not successful. %s" % resp['status'])
 
         # download img to tempfile and construct PIL obj
         imgf = tempfile.TemporaryFile()
