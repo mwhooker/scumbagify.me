@@ -44,10 +44,24 @@ class Face(object):
             ),
             'height': self.norm_y(self.tag['height']),
             'width': self.norm_x(self.tag['width']),
-            'upper_left': (
-                0, 0
-            )
         }
+        ulm = self.rotation_matrix * matrix([
+            [-self.face['width']],
+            [-self.face['height']]
+        ])
+        lrm = self.rotation_matrix * matrix([
+            [self.face['width']],
+            [self.face['height']]
+        ])
+        self.face['upper_left'] = (
+            ulm[0][0] + self.face['center'][0],
+            ulm[1][0] + self.face['center'][1]
+        )
+        self.face['lower_right'] = (
+            lrm[0][0] + self.face['center'][0],
+            lrm[1][0] + self.face['center'][1]
+        )
+        print self.face
 
 
     def find_tag(self, tags):
@@ -132,6 +146,12 @@ class Face(object):
         draw.line([(center_x, center_y), (center_x, center_y - self.face['height'])],
                   fill=color)
         draw.line([top, bottom], fill=red)
+        draw.polygon((
+            self.face['upper_left'],
+            self.face['upper_right'],
+            self.face['lower_left'],
+            self.face['lower_right']
+        ))
 
 
     def scumbagify(self, im):
@@ -164,7 +184,7 @@ def scumbagify(face, url):
 
 
 if __name__ == '__main__':
-    with open(os.path.join('..', 'test.json')) as f:
+    with open(os.path.join('..', 'daniel.json')) as f:
         resp = json.load(f)
 
     url = resp['photos'][0]['url']
