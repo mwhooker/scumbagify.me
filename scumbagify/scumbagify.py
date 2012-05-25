@@ -5,7 +5,7 @@ import json
 import tempfile
 import math
 from contextlib import closing
-from numpy import matrix
+from numpy import matrix, array
 from PIL import Image, ImageDraw
 
 hat = Image.open(os.path.join(os.path.dirname(__file__), '..', "ScumbagSteveHat.png"))
@@ -30,12 +30,7 @@ class Face(object):
         self.tag = self.find_tag(self.photo['tags'])
         self.norm_y = lambda y: int(self.photo['height'] * (y / 100))
         self.norm_x = lambda x: int(self.photo['width'] * (x / 100))
-        self.roll = math.radians(self.tag['roll'])
 
-        self.rotation_matrix = matrix([
-            [math.cos(self.roll), -math.sin(self.roll)],
-            [math.sin(self.roll), math.cos(self.roll)]]
-        )
 
         self.face = {
             'center': (
@@ -44,7 +39,38 @@ class Face(object):
             ),
             'height': self.norm_y(self.tag['height']),
             'width': self.norm_x(self.tag['width']),
+            'roll': math.radians(self.tag['roll'])
         }
+        self.matrices = {
+            'center': matrix(self.face['center']),
+            'bbox': array([
+                [[-self.face['width']], [-self.face['height']]],
+                [[self.face['width']], [-self.face['height']]],
+                [[self.face['width']], [self.face['height']]],
+                [[-self.face['width']], [self.face['height']]],
+            ]),
+            'rotation': matrix([
+                [math.cos(self.face['roll']), -math.sin(self.face['roll'])],
+                [math.sin(self.face['roll']), math.cos(self.face['roll'])]]
+            )
+        }
+        
+
+        print self.matrices
+
+
+        """
+        #self.matrices['rotated'] = self.matrices['rotation'] * self.matrices['bbox']
+
+        for c in self.matrices['bboxA']:
+            print c
+
+        self.matrices['rotated'] = [
+            self.matrices['rotation'] * c for c in self.matrices['bboxA']
+        ]
+        print [r * self.matrices['center'] for r in self.matrices['rotated']]
+        #print self.matrices['bbox'] + self.matrices['center']
+        
         ulm = self.rotation_matrix * matrix([
             [-self.face['width']],
             [-self.face['height']]
@@ -61,7 +87,7 @@ class Face(object):
             lrm[0][0] + self.face['center'][0],
             lrm[1][0] + self.face['center'][1]
         )
-        print self.face
+        """
 
 
     def find_tag(self, tags):
@@ -76,7 +102,7 @@ class Face(object):
     def find_rotation(self):
         """Return degrees to rotate hat, accounting for ss calibration."""
 
-        return math.degrees(-abs(STEVE_ROLL - self.roll))
+        return math.degrees(-abs(STEVE_ROLL - self.face['roll']))
 
 
     def find_scale(self):
@@ -104,11 +130,12 @@ class Face(object):
 
         center_x, center_y  = self.face['center']
         return tuple(map(int, (
+            0, 0
             # relative to hat size
-            self.face['upper_left'][0] - HAT_LEFT_MARGIN,
+           # self.face['upper_left'][0] - HAT_LEFT_MARGIN,
             #center_x - hat_size[0] / 2,
             # top of hat relative to face
-            self.face['upper_left'][1] - HAT_TOP_MARGIN
+           # self.face['upper_left'][1] - HAT_TOP_MARGIN
             #center_y - (self.face['height'] * 1.35)
         )))
 
@@ -129,9 +156,15 @@ class Face(object):
                 im.putpixel((x+1, y), color)
                 im.putpixel((x+1, y+1), color)
 
+
+        box = self.matrices['rotation'].dot(self.matrices['bbox']).getT() + self.matrices['center']
+        print map(int, box.getA1())
+        draw = ImageDraw.Draw(im)
+        draw.polygon(map(int, box.getA1()))
+
+
+        """
         im.putpixel(self.face['upper_left'], color)
-
-
         center_x, center_y  = self.face['center']
         top = self.rotation_matrix * matrix([
             [0], [-self.face['height']]
@@ -142,7 +175,6 @@ class Face(object):
         top = (top[0][0] + center_x, top[1][0] + center_y)
         bottom = (bottom[0][0] + center_x, bottom[1][0] + center_y)
 
-        draw = ImageDraw.Draw(im)
         draw.line([(center_x, center_y), (center_x, center_y - self.face['height'])],
                   fill=color)
         draw.line([top, bottom], fill=red)
@@ -152,6 +184,7 @@ class Face(object):
             self.face['lower_left'],
             self.face['lower_right']
         ))
+        """
 
 
     def scumbagify(self, im):
