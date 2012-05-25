@@ -1,13 +1,13 @@
 from __future__ import division
-import urllib
-import os.path
 import json
-import tempfile
 import math
+import os.path
+import tempfile
+import urllib
 from contextlib import closing
+from itertools import ifilter
 from numpy import matrix, array
 from PIL import Image, ImageDraw
-from itertools import ifilter
 
 hat = Image.open(os.path.join(os.path.dirname(__file__), '..', "ScumbagSteveHat.png"))
 
@@ -16,12 +16,6 @@ HAT_LEFT_MARGIN = 15
 HAT_TOP_MARGIN = 6
 # TODO: scale by resize
 HAT_MARGIN = matrix([15, 6])
-
-# TODO: turn in to class. remove code dup.
-# correct for face roll
-    # move along x (DONE)
-    # rotate to match ss roll.
-# more intelligent find_tag method. weight for middle
 
 
 def find_tag(tags):
@@ -178,7 +172,7 @@ class Face(object):
 
 
 if __name__ == '__main__':
-    with open(os.path.join('..', 'daniel.json')) as f:
+    with open(os.path.join('..', 'test.json')) as f:
         resp = json.load(f)
 
     url = resp['photos'][0]['url']
