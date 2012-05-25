@@ -9,7 +9,7 @@ from contextlib import closing
 from face_client import face_client
 from hashlib import md5
 from PIL import Image
-from flask import Flask, abort, redirect, request
+from flask import Flask, redirect, request
 #from flaskext.cache import Cache
 from werkzeug.contrib.fixers import ProxyFix
 
@@ -48,16 +48,20 @@ def index():
         ext
     )
 
-
     if not key.exists():
         resp = face.faces_detect(urls=url)
 
+        if resp['status'] != 'success':
+            raise Exception("Retrieving tags not successful. %s" % tag['status'])
+
+        # download img to tempfile and construct PIL obj
+        imgf = tempfile.TemporaryFile()
         with closing(urllib.urlopen(url)) as f:
-            imgf = tempfile.TemporaryFile()
             imgf.write(f.read())
         imgf.seek(0)
         img = Image.open(imgf)
 
+        # Show original picture if we can't find any scumbags
         try:
             scumbagify.scumbagify(img, resp)
         except scumbagify.FaceNotFound:
@@ -73,15 +77,6 @@ def index():
 
     return redirect(
         'https://s3.amazonaws.com/scumbagifyme/%s' % key.name
+        # couldn't get this to work with boto 2.4
         #key.generate_url(7 * 24 * 60 * 60)
     )
-
-
-def scumbagify_url(face, url):
-    """Place the hat on the image at `url` and upload to s3.
-
-    returns uploaded public URL."""
-    tag = face.faces_detect(url)
-    if tag['status'] != 'success':
-        raise Exception("Retrieving tags not successful. %s" % tag['status'])
-
