@@ -10,8 +10,7 @@ from PIL import Image
 from flask import Flask, redirect, render_template, request
 from werkzeug.contrib.fixers import ProxyFix
 
-from . import scumbagify, config
-import scumbagify as sb
+from . import scumbagify, config, __version__
 
 
 app = Flask(__name__)
@@ -46,7 +45,7 @@ def index():
 
     key = Key(bucket)
     key.key = "%s%s_%s%s" % (
-        sb.__version__,
+        __version__,
         1 if app.config['DEBUG'] or debug else 0,
         md5(url).hexdigest(),
         ext

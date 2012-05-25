@@ -9,7 +9,8 @@ install_requires = [
     'boto',
     'gunicorn',
     'face_client',
-    'PIL'
+    'PIL',
+    'numpy'
 ]
 
 if __name__ == '__main__':

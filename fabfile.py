@@ -25,6 +25,8 @@ def provision():
         'supervisor',
         'libevent-devel',
         'nginx',
+        'zlib-devel',
+        'libjpeg-devel'
     ]
     with settings(hide('stdout')):
         """
