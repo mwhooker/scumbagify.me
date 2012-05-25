@@ -33,7 +33,7 @@ face = face_client.FaceClient(
 
 @app.route('/')
 def index():
-    url = request.args.get('url')
+    url = request.args.get('src')
     debug = request.args.get('debug')
     if not url:
         return render_template('index.html')
