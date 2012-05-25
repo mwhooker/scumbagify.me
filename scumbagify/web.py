@@ -7,7 +7,7 @@ from contextlib import closing
 from face_client import face_client
 from hashlib import md5
 from PIL import Image
-from flask import Flask, redirect, render_template, request
+from flask import Flask, render_template, request
 from werkzeug.contrib.fixers import ProxyFix
 
 from . import scumbagify, config, __version__
@@ -37,18 +37,11 @@ def index():
         return render_template('index.html')
     mtype, encoding = mimetypes.guess_type(url)
 
-    try:
-        # no one knows what .jpe is.
-        ext = (set(mimetypes.guess_all_extensions(mtype)) - set(['.jpe'])).pop()
-    except KeyError:
-        ext = ".jpg"
-
     key = Key(bucket)
-    key.key = "%s%s_%s%s" % (
+    key.key = "%s%s_%s" % (
         __version__,
         1 if app.config['DEBUG'] or debug else 0,
-        md5(url).hexdigest(),
-        ext
+        md5(url).hexdigest()
     )
 
     if not key.exists():
