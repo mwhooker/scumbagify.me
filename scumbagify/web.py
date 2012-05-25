@@ -42,7 +42,11 @@ def index():
         imgf.write(f.read())
     imgf.seek(0)
     img = Image.open(imgf)
-    scumbagify.scumbagify(img, resp)
+
+    try:
+        scumbagify.scumbagify(img, resp)
+    except scumbagify.FaceNotFound:
+        redirect(url)
 
     outf = tempfile.TemporaryFile()
     img.save(outf, img.format)

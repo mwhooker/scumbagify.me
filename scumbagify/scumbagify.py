@@ -18,6 +18,9 @@ HAT_TOP_MARGIN = 6
 HAT_MARGIN = matrix([15, 6])
 
 
+class FaceNotFound(Exception): pass
+
+
 def find_tag(tags):
     """Find the tag that most likely identifies the face."""
     tags = [t for t in tags \
@@ -47,7 +50,7 @@ def scumbagify(im, resp):
         failed = False
 
     if failed:
-        raise Exception('no faces found!')
+        raise FaceNotFound
 
 
 
