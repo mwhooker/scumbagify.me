@@ -1,7 +1,10 @@
+__version__ = "0.1"
+
 import tempfile
 import mimetypes
 import urllib
 from boto.s3.connection import S3Connection
+from boto.s3.key import Key
 from contextlib import closing
 from face_client import face_client
 from hashlib import md5
@@ -35,29 +38,38 @@ face = face_client.FaceClient(
 @app.route('/')
 def index():
     url = request.args.get('url')
-    resp = face.faces_detect(urls=url)
-
-    with closing(urllib.urlopen(url)) as f:
-        imgf = tempfile.TemporaryFile()
-        imgf.write(f.read())
-    imgf.seek(0)
-    img = Image.open(imgf)
-
-    try:
-        scumbagify.scumbagify(img, resp)
-    except scumbagify.FaceNotFound:
-        redirect(url)
-
-    outf = tempfile.TemporaryFile()
-    img.save(outf, img.format)
-
     mtype, encoding = mimetypes.guess_type(url)
     ext = (set(mimetypes.guess_all_extensions(mtype)) - set(['.jpe'])).pop()
-    key = bucket.new_key(md5(url).hexdigest() + ext)
-    key.set_metadata('original', url)
-    key.set_metadata('Content-Type', mtype)
-    key.set_contents_from_file(outf, reduced_redundancy=True, rewind=True)
-    key.make_public()
+
+    key = Key(bucket)
+    key.key = "%s_%s%s" % (
+        __version__,
+        md5(url).hexdigest(),
+        ext
+    )
+
+
+    if not key.exists():
+        resp = face.faces_detect(urls=url)
+
+        with closing(urllib.urlopen(url)) as f:
+            imgf = tempfile.TemporaryFile()
+            imgf.write(f.read())
+        imgf.seek(0)
+        img = Image.open(imgf)
+
+        try:
+            scumbagify.scumbagify(img, resp)
+        except scumbagify.FaceNotFound:
+            return redirect(url)
+
+        outf = tempfile.TemporaryFile()
+        img.save(outf, img.format)
+
+        key.set_metadata('original', url)
+        key.set_metadata('Content-Type', mtype)
+        key.set_contents_from_file(outf, reduced_redundancy=True, rewind=True)
+        key.make_public()
 
     return redirect(
         'https://s3.amazonaws.com/scumbagifyme/%s' % key.name
