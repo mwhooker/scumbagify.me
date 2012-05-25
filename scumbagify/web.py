@@ -1,5 +1,3 @@
-__version__ = "0.2"
-
 import tempfile
 import mimetypes
 import urllib
@@ -13,6 +11,7 @@ from flask import Flask, redirect, render_template, request
 from werkzeug.contrib.fixers import ProxyFix
 
 from . import scumbagify, config
+import scumbagify as sb
 
 
 app = Flask(__name__)
@@ -47,7 +46,7 @@ def index():
 
     key = Key(bucket)
     key.key = "%s%s_%s%s" % (
-        __version__,
+        sb.__version__,
         1 if app.config['DEBUG'] or debug else 0,
         md5(url).hexdigest(),
         ext

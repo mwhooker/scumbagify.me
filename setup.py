@@ -1,4 +1,4 @@
-from scumbagify.web import __version__
+from scumbagify import __version__
 from setuptools import setup, find_packages
 
 
