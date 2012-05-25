@@ -40,7 +40,7 @@ def index():
     key = Key(bucket)
     key.key = "%s%s_%s" % (
         __version__,
-        1 if app.config['DEBUG'] or debug else 0,
+        'D' if app.config['DEBUG'] or debug else '',
         md5(url).hexdigest()
     )
 
